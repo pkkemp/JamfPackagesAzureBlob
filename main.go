@@ -10,11 +10,6 @@ import (
 	"time"
 )
 
-const cdnEndpoint ="dist-usaf.azureedge.us"
-const blobEndpoint = "jamfpackages.blob.core.usgovcloudapi.net"
-const accountKey = "Sb1DifmMa/g+e7mRtJiSHMWaKa+TOYZaGOmZ2nrpLwThPFmC7o/uODPY+NHJ2Z3rm5OZ5JHZjbFOrabTtn3f4A=="
-const accountName = "jamfpackages"
-
 var (
 	username = os.Getenv("BASIC_AUTH_USERNAME")
 	password = os.Getenv("BASIC_AUTH_PASSWORD")
@@ -24,9 +19,7 @@ var (
     cdnEndpoint = os.Getenv("CDN_ENDPOINT")
 )
 
-
 func main() {
-
 	handler := http.HandlerFunc(handleRequest)
 	http.Handle("/Packages/", handler)
 	http.ListenAndServe(":8080", nil)
@@ -34,6 +27,7 @@ func main() {
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {
 
+	//check if BasicAuth username and password is correct
 	u, p, ok := r.BasicAuth()
 	if !ok {
 		fmt.Println("Error parsing basic auth")
@@ -41,34 +35,30 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if u != username {
-		fmt.Printf("Username provided is correct: %s\n", u)
 		w.WriteHeader(401)
 		return
 	}
 	if p != password {
-		fmt.Printf("Password provided is correct: %s\n", u)
 		w.WriteHeader(401)
 		return
 	}
-	//fmt.Printf("Username: %s\n", u)
-	//fmt.Printf("Password: %s\n", p)
+
 	path := r.URL.Path
+	//split the path to get the name of the blob the client is after
 	splitPath := strings.SplitN(path, "/", 3)
+	// This is the name of the container and blob that we're creating a SAS to.
+	containerName := "packages" // Container names require lowercase
+	blobName := splitPath[2]   // Blob names can be mixed case
+
 	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-
-
-	// This is the name of the container and blob that we're creating a SAS to.
-	containerName := "packages" // Container names require lowercase
-	blobName := splitPath[2]   // Blob names can be mixed case
-
 	// Set the desired SAS signature values and sign them with the shared key credentials to get the SAS query parameters.
 	sasQueryParams, err := azblob.BlobSASSignatureValues{
 		Protocol:      azblob.SASProtocolHTTPS,                     // Users MUST use HTTPS (not HTTP)
-		ExpiryTime:    time.Now().UTC().Add(48 * time.Hour), // 48-hours before expiration
+		ExpiryTime:    time.Now().UTC().Add(20 * time.Minute), // 20 minutes before expiration
 		ContainerName: containerName,
 		BlobName:      blobName,
 
@@ -76,6 +66,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		// ContainerSASPermissions and make sure the BlobName field is "" (the default).
 		Permissions: azblob.BlobSASPermissions{Add: false, Read: true, Write: false}.String(),
 	}.NewSASQueryParameters(credential)
+
 	if err != nil {
 		log.Fatal(err)
 	}
