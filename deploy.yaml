@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metacdn
+  labels:
+    app: metacdn
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: metacdn
+  template:
+    metadata:
+      labels:
+        app: metacdn
+    spec:
+      containers:
+        - name: metacdn
+          image: jamfcontainerregistry.azurecr.us/metacdn:v1
+        #   livenessProbe:
+        #     httpGet:
+        #       path: /healthCheck.html
+        #       port: 8080
+        #     failureThreshold: 1
+        #     periodSeconds: 10
+        #   startupProbe:
+        #     httpGet:
+        #       path: /healthCheck.html
+        #       port: 8080
+        #     failureThreshold: 30
+        #     periodSeconds: 10
+          ports:
+            - containerPort: 8080
+          env:
+           - name: BASIC_AUTH_USERNAME
+             valueFrom:
+              secretKeyRef:
+               name: azure-blob-storage
+               key: username
+           - name: BASIC_AUTH_PASSWORD
+             valueFrom:
+              secretKeyRef:
+               name: azure-blob-storage
+               key: password
+           - name: ACCOUNT_NAME
+             value: "jamfpackages"
+           - name: ACCOUNT_KEY
+             valueFrom:
+              secretKeyRef:
+               name: azure-blob-storage
+               key: accountkey
+           - name: BLOB_ENDPOINT
+             value: "jamfpackages.blob.core.usgovcloudapi.net"
+           - name: CDN_ENDPOINT
+             value: "dist-usaf.azureedge.us"
+      imagePullSecrets:
+        - name: jamfregistrysecret
+      volumes:
+      - name: cache-volume
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metacdn-svc
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+  selector:
+    app: metacdn
+
+    
+    
+
+
