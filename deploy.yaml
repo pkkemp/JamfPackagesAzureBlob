@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: metacdn
-          image: jamfcontainerregistry.azurecr.us/metacdn:v1
+          image: jamfcontainerregistry.azurecr.us/metacdn:v2
         #   livenessProbe:
         #     httpGet:
         #       path: /healthCheck.html
