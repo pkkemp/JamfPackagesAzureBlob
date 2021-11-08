@@ -42,7 +42,6 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		// This is the name of the container and blob that we're creating a SAS to.
 		containerName := "packages" // Container names require lowercase
 		blobName := splitPath[2]    // Blob names can be mixed case
-
 		credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 		if err != nil {
 			log.Fatal(err)
@@ -70,7 +69,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		signedURL := fmt.Sprintf("https://%s/%s/%s?%s",
 			cdnEndpoint, containerName, blobName, qp)
 
-		http.Redirect(w, r, signedURL, 302)
+		http.Redirect(w, r, signedURL, 307)
 		return
 	} else {
 		w.WriteHeader(401)
