@@ -11,12 +11,12 @@ import (
 )
 
 var (
-	username = os.Getenv("BASIC_AUTH_USERNAME")
-	password = os.Getenv("BASIC_AUTH_PASSWORD")
-	accountKey = os.Getenv("ACCOUNT_KEY")
-    accountName = os.Getenv("ACCOUNT_NAME")
-    blobEndpoint = os.Getenv("BLOB_ENDPOINT")
-    cdnEndpoint = os.Getenv("CDN_ENDPOINT")
+	username     = os.Getenv("BASIC_AUTH_USERNAME")
+	password     = os.Getenv("BASIC_AUTH_PASSWORD")
+	accountKey   = os.Getenv("ACCOUNT_KEY")
+	accountName  = os.Getenv("ACCOUNT_NAME")
+	blobEndpoint = os.Getenv("BLOB_ENDPOINT")
+	cdnEndpoint  = os.Getenv("CDN_ENDPOINT")
 )
 
 func main() {
@@ -41,7 +41,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		splitPath := strings.SplitN(path, "/", 3)
 		// This is the name of the container and blob that we're creating a SAS to.
 		containerName := "packages" // Container names require lowercase
-		blobName := splitPath[2]   // Blob names can be mixed case
+		blobName := splitPath[2]    // Blob names can be mixed case
 
 		credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 		if err != nil {
@@ -50,7 +50,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 		// Set the desired SAS signature values and sign them with the shared key credentials to get the SAS query parameters.
 		sasQueryParams, err := azblob.BlobSASSignatureValues{
-			Protocol:      azblob.SASProtocolHTTPS,                     // Users MUST use HTTPS (not HTTP)
+			Protocol:      azblob.SASProtocolHTTPS,                // Users MUST use HTTPS (not HTTP)
 			ExpiryTime:    time.Now().UTC().Add(20 * time.Minute), // 20 minutes before expiration
 			ContainerName: containerName,
 			BlobName:      blobName,
